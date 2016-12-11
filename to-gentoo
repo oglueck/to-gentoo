@@ -173,7 +173,17 @@ ldd /bin/mv | sed "s/\t//" | cut -d " " -f1 | while read f ; do
   fi
 done
 # glibc, musl are supported here
-MYMV="${MV}"/ld-*-x86?x64.so.? --library-path "${MV}" "${MV}/mv"
+MYMV="${MV}/ld-*-x86?64.so.? --library-path ${MV} ${MV}/mv"
+# test it
+touch /tmp/a
+${MYMV} /tmp/a /tmp/b
+if [ ! -e /tmp/b ]; then
+  echo "didn't manage to create a working standalone mv" >&2
+  echo "This doesn't work as expected:" >&2
+  echo "${MYMV}"
+  exit 1
+fi
+rm /tmp/b
 
 echo "Now switching over your installation!"
 DIRS="etc lib lib32 lib64 var usr sbin bin"
