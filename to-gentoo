@@ -153,28 +153,50 @@ fi
 
 echo "Back from chroot"
 rm "${GENTOO}/to-gentoo"
-# FIXME dev, sys don't work here
 umount -R "${GENTOO}/dev"
 umount -R "${GENTOO}/sys"
 umount -R "${GENTOO}/proc"
 
+echo "Creating a working standalone mv"
+MV=$(mktemp -d)
+cp /bin/mv "${MV}"
+ldd /bin/mv | sed "s/\t//" | cut -d " " -f1 | while read f ; do
+  if [ "${f}" == "linux-vdso.so.1" ] ||
+     [ "${f}" == "linux-gate.so.1" ]; then
+    continue
+  fi
+
+  if [ -e "${f}" ]; then
+    cp "${f}" "${MV}"
+  elif [ -e "/lib/${f}" ]; then
+    cp "/lib/${f}" "${MV}"
+  fi
+done
+# glibc, musl are supported here
+MYMV="${MV}"/ld-*-x86?x64.so.? --library-path "${MV}" "${MV}/mv"
+
 echo "Now switching over your installation!"
-DIRS="bin etc lib lib32 lib64 run sbin usr var"
+DIRS="etc lib lib32 lib64 var usr sbin bin"
 cd /
+
+# FIXME deal with systems that mount /var/run tmpfs
+
 echo "moving to ${OLD}/:"
 for d in ${DIRS}; do
   echo " - ${d}"
-  [ -e "${d}" ] && mv "${d}" "${OLD}/"
+  [ -e "${d}" ] && ${MYMV} "${d}" "${OLD}/" || true
 done
 
 echo "replacing with Gentoo:"
 for d in ${DIRS}; do
   echo " - ${d}"
-  mv "${GENTOO}/${d}" .
+  ${MYMV} "${GENTOO}/${d}" .
 done
 
 echo "Cleaning up"
+rm -rf "${MV}"
 rm -rf "${GENTOO}"
 
 echo "Your old system is in ${OLD}"
+echo "Keeping your kernel and /boot. Please review..."
 echo "DONE! You should reboot now."
