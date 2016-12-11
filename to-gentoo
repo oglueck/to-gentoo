@@ -24,6 +24,23 @@ if [ "$(uname -m)" != "x86_64" ]; then
   exit 1
 fi
 
+if [ "$(whoami)" != "root" ]; then
+  echo "The script needs to be run as root. You are $(whoami)." >&2
+  exit 1
+fi
+
+which sed tar wget curl tar grep awk mount umount bash >/dev/null || {
+  echo "Missing utilitites. Please install them." >&2
+  exit 1
+}
+
+for f in sed tar grep awk bash; do
+  if [ "$(basename $(readlink -f $(which ${f})))" = "busybox" ]; then
+    echo "binary $(which $f) is from BusyBox, please install the real (GNU) version" >&2
+    exit 1
+  fi
+done
+
 RUNLEVEL=""
 which runlevel &>/dev/null && RUNLEVEL="$(runlevel | cut -d ' ' -f 2)"
 if [ -z "${RUNLEVEL}" ]; then
@@ -39,17 +56,14 @@ case "${RUNLEVEL}" in
   ;;
 esac
 
-if [ "$(whoami)" != "root" ]; then
-  echo "The script needs to be run as root. You are $(whoami)." >&2
-  exit 1
-fi
-
 FREE=$(df -m / | sed '1d' | awk '{ print $4; }')
-MIN=10000
+MIN=8000
 if [ "${FREE}" -lt "${MIN}" ]; then
   echo "No enough free disk space. Need ${MIN}K, there is only ${FREE}K" >&2
   exit 1
 fi
+
+#FIXME check if network is up
 
 echo "Installing Gentoo base system into ${GENTOO}. Old system will be moved to ${OLD}."
 mkdir "${GENTOO}"
@@ -62,13 +76,14 @@ wget "${MIRROR}releases/amd64/autobuilds/${STAGE3}"
 
 STAGE3=$(ls -1 *.tar.bz2)
 echo "Unpacking ${STAGE3}"
+# FIXME BusyBox tar has no --xattrs
 tar xjpf "${STAGE3}" --xattrs
 rm "${STAGE3}"
 
 echo "Copying stuff from existing system:"
 # root password
 echo " - root password"
-sed '/^root:/ d' etc/shadow
+sed -i '/^root:/ d' etc/shadow
 grep ^root: /etc/shadow >>etc/shadow
 # extra users and groups
 awk -F: '$3 > 999 && $3 < 65000 { print $0; }' /etc/passwd >>etc/passwd
