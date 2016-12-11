@@ -1,0 +1,126 @@
+#!/bin/bash
+# Converts a random Linux installation to Gentoo
+
+# crash early
+set -e
+
+SELF="$(readlink -f $0)"
+export LANG=C
+
+# see https://www.gentoo.org/downloads/mirrors/
+#MIRROR="http://distfiles.gentoo.org/"
+MIRROR="http://mirror.switch.ch/ftp/mirror/gentoo/"
+GENTOO="/gentoo"
+OLD="/orig"
+
+# check preconditions
+if [ "$(uname -s)" != "Linux" ]; then
+  echo "Only Linux can be converted. Your system is $(uname -s)." >&2
+  exit 1
+fi
+
+if [ "$(uname -m)" != "x86_64" ]; then
+  echo "Only x86_64 is supported. Your system is $(uname -m)." >&2
+  exit 1
+fi
+
+RUNLEVEL="$(runlevel | cut -d ' ' -f 2)"
+if [ "${RUNLEVEL}" != "S" -a "${RUNLEVEL}" != "unknown" ]; then
+  echo "Please run this script from single-user mode: init s" >&2
+  exit 1
+fi
+
+if [ "$(whoami)" != "root" ]; then
+  echo "The script needs to be run as root. You are $(whoami)." >&2
+  exit 1
+fi
+
+FREE=$(df -BM --output=avail / | sed '1d' | cut -d M -f 1)
+MIN=10000
+if [ "${FREE}" -lt "${MIN}" ]; then
+  echo "No enough free disk space. Need ${MIN}K, there is only ${FREE}K" >&2
+  exit 1
+fi
+
+echo "Installing Gentoo base system into ${GENTOO}. Old system will be moved to ${OLD}."
+mkdir "${GENTOO}"
+mkdir "${OLD}"
+cd "${GENTOO}"
+
+STAGE3=$(curl -s "${MIRROR}releases/amd64/autobuilds/latest-stage3-amd64.txt" | sed '/^#/d' | cut -d ' ' -f 1)
+echo "Downloading ${STAGE3}..."
+wget "${MIRROR}releases/amd64/autobuilds/${STAGE3}"
+
+STAGE3=$(ls -1 *.tar.bz2)
+echo "Unpacking ${STAGE3}"
+tar xjpf "${STAGE3}" --xattrs
+rm "${STAGE3}"
+
+echo "Copying stuff from existing system"
+cp -ra /usr/local/* usr/local/ || true
+
+echo "Preparing chroot env"
+cp -L "/etc/resolv.conf" etc/ || cp -L /etc/resolv.conf etc/
+cp -L "/etc/localtime" etc/ || cp -L /etc/localtime etc/
+cp -L "/etc/fstab" etc/ || cp -L /etc/fstab etc/
+
+mount -t proc proc "${GENTOO}/proc"
+mount --rbind /sys "${GENTOO}/sys"
+mount --make-rslave "${GENTOO}/sys"
+mount --rbind /dev "${GENTOO}/dev"
+mount --make-rslave "${GENTOO}/dev"
+
+if [ -L /dev/shm ]; then
+  # Gentoo requires /dev/shm to be its own tmpfs
+  rm /dev/shm
+  mkdir /dev/shm
+  mount -t tmpfs -o nosuid,nodev,noexec shm /dev/shm
+  chmod 1777 /dev/shm
+fi
+
+# copy ourselves into the new chroot and strip away what we have already executed
+cp "${SELF}" "${GENTOO}/"
+sed -i '0,/^chroot / d' "${GENTOO}/to-gentoo"
+
+# continue execution within chroot
+chroot "${GENTOO}" /bin/bash /to-gentoo
+
+# inside the chroot we are in a new shell, when we return from chroot 
+# we end up here and skip this part
+if [ -z "${GENTOO}" ]; then 
+  echo "Inside chroot now"
+  set -e
+  source /etc/profile
+  echo "Downloading Portage tree snapshot"
+  mkdir -p /etc/portage/repos.conf
+  cp /usr/share/portage/config/repos.conf /etc/portage/repos.conf/gentoo.conf
+  emerge-webrsync
+  
+  # TODO kernel, grub, initramfs
+  # exit chroot, outer script will continue below
+  exit
+fi
+
+echo "Back from chroot"
+rm "${GENTOO}/to-gentoo"
+# FIXME dev, sys don't work here
+umount -R "${GENTOO}/dev"
+umount -R "${GENTOO}/sys"
+umount -R "${GENTOO}/proc"
+
+echo "Now switching over your installation!"
+echo "Keeping /boot, /root, /home, /opt, /mnt, /media, but not /etc, /var!"
+cd /
+for d in bin etc lib lib32 lib64 run sbin usr var; do
+  [ -e "${d}" ] && mv "${d}" "${OLD}/"
+done
+
+for d in bin etc lib lib32 lib64 run sbin usr var; do
+  mv "${GENTOO}/${d}" .
+done
+
+echo "Cleaning up"
+rm -rf "${GENTOO}"
+
+echo "Your old system is in ${OLD}"
+echo "DONE! You should reboot now."
