@@ -70,6 +70,8 @@ awk -F: '$3 > 999 && $3 < 65000 { print $1; }' /etc/passwd | while read N; do
 done
 echo " - /usr/local"
 cp -ra /usr/local/* usr/local/ || true
+echo " - SSH keys"
+cp -a /etc/ssh/*key* etc/ssh || true
 
 echo "Preparing chroot env"
 cp -L "/etc/resolv.conf" etc/ || cp -L /etc/resolv.conf etc/
