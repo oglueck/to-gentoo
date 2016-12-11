@@ -192,6 +192,7 @@ cd /
 # FIXME deal with systems that mount /var/run tmpfs
 
 echo "moving to ${OLD}/:"
+[ -e /linuxrc ] && mv /linuxrc "${OLD}/"
 for d in ${DIRS}; do
   echo " - ${d}"
   [ -e "${d}" ] && ${MYMV} "${d}" "${OLD}/"
@@ -216,6 +217,6 @@ echo "Cleaning up"
 rm -rf "${MV}"
 rm -rf "${GENTOO}"
 
-echo "Your old system is in ${OLD}"
+echo "Your old system is in ${OLD}. Remove manually."
 echo "Keeping your kernel and /boot. Please review..."
 echo "DONE! You should reboot now."
