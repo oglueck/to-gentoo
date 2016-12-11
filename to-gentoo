@@ -56,7 +56,19 @@ echo "Unpacking ${STAGE3}"
 tar xjpf "${STAGE3}" --xattrs
 rm "${STAGE3}"
 
-echo "Copying stuff from existing system"
+echo "Copying stuff from existing system:"
+# root password
+echo " - root password"
+sed '/^root:/ d' etc/shadow
+grep ^root: /etc/shadow >>etc/shadow
+# extra users and groups
+awk -F: '$3 > 999 && $3 < 65000 { print $0; }' /etc/passwd >>etc/passwd
+awk -F: '$3 > 999 && $3 < 65000 { print $0; }' /etc/group >>etc/group
+awk -F: '$3 > 999 && $3 < 65000 { print $1; }' /etc/passwd | while read N; do
+  echo " - user ${N}"
+  grep "^${N}:" /etc/shadow >>etc/shadow
+done
+echo " - /usr/local"
 cp -ra /usr/local/* usr/local/ || true
 
 echo "Preparing chroot env"
@@ -109,13 +121,17 @@ umount -R "${GENTOO}/sys"
 umount -R "${GENTOO}/proc"
 
 echo "Now switching over your installation!"
-echo "Keeping /boot, /root, /home, /opt, /mnt, /media, but not /etc, /var!"
+DIRS="bin etc lib lib32 lib64 run sbin usr var"
 cd /
-for d in bin etc lib lib32 lib64 run sbin usr var; do
+echo "moving to ${OLD}/:"
+for d in ${DIRS}; do
+  echo " - ${d}"
   [ -e "${d}" ] && mv "${d}" "${OLD}/"
 done
 
-for d in bin etc lib lib32 lib64 run sbin usr var; do
+echo "replacing with Gentoo:"
+for d in ${DIRS}; do
+  echo " - ${d}"
   mv "${GENTOO}/${d}" .
 done
 
