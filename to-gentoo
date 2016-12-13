@@ -227,6 +227,12 @@ echo "Cleaning up"
 rm -rf "${MV}"
 rm -rf "${GENTOO}"
 
+grep -q '^root:!' /etc/shadow && {
+  echo "root account is disabled. Gentoo uses root. Please set a password."
+  passwd
+}
+chsh -s /bin/bash
+
 echo "Your old system is in ${OLD}. Remove manually."
 echo "Keeping your kernel and /boot. Please review..."
 echo "DONE! You should reboot now."
