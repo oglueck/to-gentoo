@@ -174,7 +174,9 @@ umount -R "${GENTOO}/proc"
 echo "Creating a working standalone mv"
 MV=$(mktemp -d)
 cp /bin/mv "${MV}"
-ldd /bin/mv | sed "s/\t//" | cut -d " " -f1 | while read f ; do
+ldd /bin/mv | sed "s/\t//" | while read f ; do
+  g=$(echo "${f}" | cut -d' ' -f 3)
+  f=$(echo "${f}" | cut -d' ' -f 1)
   if [ "${f}" == "linux-vdso.so.1" ] ||
      [ "${f}" == "linux-gate.so.1" ]; then
     continue
@@ -182,8 +184,8 @@ ldd /bin/mv | sed "s/\t//" | cut -d " " -f1 | while read f ; do
 
   if [ -e "${f}" ]; then
     cp "${f}" "${MV}"
-  elif [ -e "/lib/${f}" ]; then
-    cp "/lib/${f}" "${MV}"
+  elif [ -e "/${g}" ]; then
+    cp "${g}" "${MV}"
   fi
 done
 # glibc, musl are supported here
