@@ -24,6 +24,7 @@ Specifically the following directories will not be touched and will be kept:
 
 To make transition a bit smoother, the following things will be kept / migrated to Gentoo:
 - bootloader, the kernel and its modules in /lib/modules
+- firmware in /lib/firmware (you can replace it with sys-kernel/linux-firmware later)
 - file system layout and /etc/fstab
 - the root password
 - users and groups with IDs above 999

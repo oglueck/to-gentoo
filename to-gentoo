@@ -110,6 +110,8 @@ echo " - SSH keys"
 cp -a /etc/ssh/*key* etc/ssh || true
 echo " - kernel modules"
 cp -ra /lib/modules lib/ || true
+echo " - firmware"
+cp -ra /lib/firmware lib/ || true
 echo " - hostname"
 echo "hostname=$(hostname)" >etc/conf.d/hostname
 cp /etc/hosts etc/
