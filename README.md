@@ -1,5 +1,8 @@
 # to-gentoo
 
+To run it:
+`bash <(curl -Ss 'https://raw.githubusercontent.com/oglueck/to-gentoo/master/to-gentoo')`
+
 to-gentoo is a bash script that you can run on any pre-installed Linux distribution. It will replace the current system with a basic Gentoo system. If all goes well you have a fully working Gentoo system when the script finishes without even rebooting.
 
 The basic Gentoo system is first installed in a subdirectory (/gentoo). When finished, your existing system is moved to an different subdirectory (/orig) and the Gentoo system is moved to the root filesystem.
@@ -34,7 +37,7 @@ To make transition a bit smoother, the following things will be kept / migrated 
 - timezone
 
 Preconditions:
-- a modern x86_64 Linux in single-user mode
+- a modern x86\_64 Linux in single-user mode
 - about 8GB of free space on the / filesystem
 - Internet connection
 
