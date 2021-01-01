@@ -9,7 +9,7 @@ export LANG=C
 
 # see https://www.gentoo.org/downloads/mirrors/
 #MIRROR="http://distfiles.gentoo.org/"
-MIRROR="http://mirror.switch.ch/ftp/mirror/gentoo/"
+MIRROR="http://mirror.leaseweb.com/gentoo/"
 GENTOO="/gentoo"
 OLD="/orig"
 
@@ -86,10 +86,10 @@ cd "${GENTOO}"
 echo "Downloading ${STAGE3}..."
 wget "${MIRROR}releases/amd64/autobuilds/${STAGE3}"
 
-STAGE3=$(ls -1 *.tar.bz2)
+STAGE3=$(ls -1 *.tar.xz)
 echo "Unpacking ${STAGE3}"
 # FIXME BusyBox tar has no --xattrs
-tar xjpf "${STAGE3}" --xattrs
+tar xpf "${STAGE3}" --xattrs
 rm "${STAGE3}"
 
 echo "Copying stuff from existing system:"
@@ -219,7 +219,7 @@ done
 echo "replacing with Gentoo:"
 for d in ${DIRS}; do
   echo " - ${d}"
-  ${MYMV} "${GENTOO}/${d}" .
+  [ -d "${GENTOO}/${d}" ] && ${MYMV} "${GENTOO}/${d}" .
 done
 
 source /etc/profile
