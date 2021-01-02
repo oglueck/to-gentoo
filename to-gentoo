@@ -8,8 +8,8 @@ SELF="$(readlink -f $0)"
 export LANG=C
 
 # see https://www.gentoo.org/downloads/mirrors/
-#MIRROR="http://distfiles.gentoo.org/"
-MIRROR="http://mirror.switch.ch/ftp/mirror/gentoo/"
+#MIRROR="https://mirror.init7.net/gentoo/"
+MIRROR="http://distfiles.gentoo.org/"
 GENTOO="/gentoo"
 OLD="/orig"
 
