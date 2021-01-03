@@ -188,7 +188,7 @@ fi
 rm /tmp/b
 
 echo "Now switching over your installation!"
-DIRS="etc lib lib32 lib64 var usr sbin bin"
+DIRS="etc lib lib64 var usr sbin bin"
 cd /
 
 # FIXME deal with systems that mount /var/run tmpfs
