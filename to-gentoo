@@ -74,7 +74,7 @@ fi
 
 STAGE3=$(curl -s "${MIRROR}releases/amd64/autobuilds/latest-stage3-amd64.txt" | sed '/^#/d' | cut -d ' ' -f 1)
 if [ -z "${STAGE3}" ]; then
-  echo "Is the network up?" >&2
+  echo "Is the network up and DNS works?" >&2
   exit 1
 fi
 
@@ -173,25 +173,9 @@ umount -R "${GENTOO}/dev"
 umount -R "${GENTOO}/sys"
 umount -R "${GENTOO}/proc"
 
-echo "Creating a working standalone mv"
-MV=$(mktemp -d)
-cp /bin/mv "${MV}"
-ldd /bin/mv | sed "s/\t//" | while read f ; do
-  g=$(echo "${f}" | cut -d' ' -f 3)
-  f=$(echo "${f}" | cut -d' ' -f 1)
-  if [ "${f}" == "linux-vdso.so.1" ] ||
-     [ "${f}" == "linux-gate.so.1" ]; then
-    continue
-  fi
-
-  if [ -e "${f}" ]; then
-    cp "${f}" "${MV}"
-  elif [ -e "/${g}" ]; then
-    cp "${g}" "${MV}"
-  fi
-done
-# glibc, musl are supported here
-MYMV="${MV}/ld-*-x86?64.so.? --library-path ${MV} ${MV}/mv"
+# using static busybox from Gentoo to run mv
+cp "${GENTOO}/bin/busybox" /tmp
+MYMV="/tmp/busybox mv"
 # test it
 touch /tmp/a
 ${MYMV} /tmp/a /tmp/b
