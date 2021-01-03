@@ -4,7 +4,6 @@
 # crash early
 set -e
 
-SELF="$(readlink -f $0)"
 export LANG=C
 
 # see https://www.gentoo.org/downloads/mirrors/
@@ -115,17 +114,13 @@ cp -ra /lib/firmware lib/ || true
 echo " - hostname"
 echo "hostname=$(hostname)" >etc/conf.d/hostname
 cp /etc/hosts etc/
+echo " - DNS config"
+cp -L "/etc/resolv.conf" etc/ || cp /etc/resolv.conf etc/
+echo " - timezone"
+cp -L "/etc/localtime" etc/ || cp /etc/localtime etc/
+echo " - fstab"
+cp -L "/etc/fstab" etc/ || cp /etc/fstab etc/
 
-echo "Preparing chroot env"
-cp -L "/etc/resolv.conf" etc/ || cp -L /etc/resolv.conf etc/
-cp -L "/etc/localtime" etc/ || cp -L /etc/localtime etc/
-cp -L "/etc/fstab" etc/ || cp -L /etc/fstab etc/
-
-mount -t proc proc "${GENTOO}/proc"
-mount --rbind /sys "${GENTOO}/sys"
-mount --make-rslave "${GENTOO}/sys"
-mount --rbind /dev "${GENTOO}/dev"
-mount --make-rslave "${GENTOO}/dev"
 
 if [ -L /dev/shm ]; then
   # Gentoo requires /dev/shm to be its own tmpfs
@@ -135,43 +130,6 @@ if [ -L /dev/shm ]; then
   chmod 1777 /dev/shm
 fi
 
-# copy ourselves into the new chroot and strip away what we have already executed
-cp "${SELF}" "${GENTOO}/"
-sed -i '0,/^chroot / d' "${GENTOO}/to-gentoo"
-
-# continue execution within chroot
-chroot "${GENTOO}" /bin/bash /to-gentoo
-
-# inside the chroot we are in a new shell, when we return from chroot 
-# we end up here and skip this part
-if [ -z "${GENTOO}" ]; then 
-  echo "Inside chroot now"
-  set -e
-  source /etc/profile
-  echo "Downloading Portage tree snapshot"
-  mkdir -p /etc/portage/repos.conf
-  cp /usr/share/portage/config/repos.conf /etc/portage/repos.conf/gentoo.conf
-  emerge-webrsync
-  emerge --sync
-  emerge -v --noreplace net-misc/netifrc net-misc/dhcpcd
-  rc-update add sshd default
-
-  echo "Symlinking net.lo"
-  ip link show up | awk '/^[0-9][0-9]?:/ && $2 != "lo:" { print $2; }' | cut -d: -f1 | while read f ; do
-    cd /etc/init.d/
-    echo " - ${f}"
-    ln -s net.lo net.${f}
-  done
-
-  # exit chroot, outer script will continue below
-  exit
-fi
-
-echo "Back from chroot"
-rm "${GENTOO}/to-gentoo"
-umount -R "${GENTOO}/dev"
-umount -R "${GENTOO}/sys"
-umount -R "${GENTOO}/proc"
 
 # using static busybox from Gentoo to run mv
 cp "${GENTOO}/bin/busybox" /tmp
@@ -188,7 +146,7 @@ fi
 rm /tmp/b
 
 echo "Now switching over your installation!"
-DIRS="etc lib lib64 var usr sbin bin"
+DIRS="etc lib lib32 lib64 var usr sbin bin"
 cd /
 
 # FIXME deal with systems that mount /var/run tmpfs
@@ -210,8 +168,23 @@ source /etc/profile
 hash -r
 
 echo "Cleaning up"
-rm -rf "${MV}"
+rm -rf "/tmp/busybox"
 rm -rf "${GENTOO}"
+
+echo "Downloading Portage tree snapshot"
+mkdir -p /etc/portage/repos.conf
+cp /usr/share/portage/config/repos.conf /etc/portage/repos.conf/gentoo.conf
+emerge-webrsync
+emerge --sync
+emerge -v --noreplace net-misc/netifrc net-misc/dhcpcd
+rc-update add sshd default
+
+echo "Symlinking net.lo"
+ip link show up | awk '/^[0-9][0-9]?:/ && $2 != "lo:" { print $2; }' | cut -d: -f1 | while read f ; do
+  cd /etc/init.d/
+  echo " - ${f}"
+  ln -s net.lo net.${f}
+done
 
 grep -q '^root:!' /etc/shadow && {
   echo "root account is disabled. Gentoo uses root. Please set a password."
@@ -221,4 +194,5 @@ chsh -s /bin/bash
 
 echo "Your old system is in ${OLD}. Remove manually."
 echo "Keeping your kernel and /boot. Please review..."
+echo "It is advisable to install a new kernel and install and configure grub."
 echo "DONE! You should reboot now."
