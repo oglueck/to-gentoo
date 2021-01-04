@@ -58,3 +58,7 @@ What are the essential tasks?
 
 When something goes wrong
 In the worst case the script will fail in a state where your system has (partially) been moved to /orig or /gentoo has partially been moved to the root filesystem. In that case the system is not functional. Boot from [System Rescue CD](https://www.system-rescue-cd.org), mount the root filesystem and move the folders back in place manually. Then reboot.
+
+Known issues
+- When the script ends the original init system (sysvinit, systemd) is still running.
+  Especially systemd doesn't like when we remove its files from under its feet. So it will no longer work correctly and espcially will not shutdown smoothly. So for systemd you can cal sync and then power down the system.
