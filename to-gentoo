@@ -28,7 +28,7 @@ if [ "$(whoami)" != "root" ]; then
   exit 1
 fi
 
-for f in sed tar wget curl tar grep awk mount umount bash; do
+for f in sed tar wget curl tar grep awk mount bash; do
   which "${f}" >/dev/null || {
     echo "${f} missing. Please install." >&2
     exit 1
@@ -42,7 +42,7 @@ for f in sed tar grep awk bash; do
   fi
 done
 
-for f in mount umount; do
+for f in mount; do
   if [ "$(basename $(readlink -f $(which ${f})))" = "bbsuid" ]; then
     echo "binary $(which $f) is from BusyBox, please install the version from util-linux" >&2
     exit 1
