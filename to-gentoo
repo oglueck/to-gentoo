@@ -155,7 +155,7 @@ echo "moving to ${OLD}/:"
 [ -e /linuxrc ] && mv /linuxrc "${OLD}/"
 for d in ${DIRS}; do
   echo " - ${d}"
-  [ -e "${d}" ] && ${MYMV} "${d}" "${OLD}/"
+  [ -e "${d}" -o -L "${d}" ] && ${MYMV} "${d}" "${OLD}/"
 done
 
 echo "replacing with Gentoo:"
