@@ -52,7 +52,7 @@ You can simply continue working through the [Gentoo Handbook](https://wiki.gento
 What are the essential tasks?
 - You should probably compile and install a new kernel
 - Create a new initramfs (aka initrd) and install grub and its config
-- Install syslogd and vixie-cron and all other software you might need
+- Install syslog-ng and cronie and all other software you might need
 - Migrate anything you need from the old system which is found in /orig
 - free up space by removing the old system
 
@@ -61,4 +61,4 @@ In the worst case the script will fail in a state where your system has (partial
 
 Known issues
 - When the script ends the original init system (sysvinit, systemd) is still running.
-  Especially systemd doesn't like when we remove its files from under its feet. So it will no longer work correctly and espcially will not shutdown smoothly. So for systemd you can cal sync and then power down the system.
+  Especially systemd doesn't like when we remove its files from under its feet. So it will no longer work correctly and espcially will not shutdown smoothly. So for systemd you can call sync and then power down the system.
