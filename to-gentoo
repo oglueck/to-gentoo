@@ -74,7 +74,7 @@ if [ "${FREE}" -lt "${MIN}" ]; then
   exit 1
 fi
 
-STAGE3=$(curl -s "${MIRROR}releases/amd64/autobuilds/latest-stage3-amd64.txt" | sed '/^#/d' | cut -d ' ' -f 1)
+STAGE3=$(curl -s "${MIRROR}releases/amd64/autobuilds/latest-stage3-amd64-openrc.txt" | sed '/^#/d' | cut -d ' ' -f 1)
 if [ -z "${STAGE3}" ]; then
   echo "Is the network up and DNS works?" >&2
   exit 1
