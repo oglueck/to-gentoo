@@ -54,8 +54,11 @@ which runlevel &>/dev/null && RUNLEVEL="$(runlevel | cut -d ' ' -f 2)"
 if [ -z "${RUNLEVEL}" ]; then
   which rc-status &>/dev/null && RUNLEVEL="$(rc-status -r)"
 fi
+if [ -z "${RUNLEVEL}" ]; then
+  which systemctl &>/dev/null && RUNLEVEL="systemd"
+fi
 case "${RUNLEVEL}" in
-  S | unknown | single | 1)
+  S | unknown | single | systemd | 1)
     ;;
 
   *)
