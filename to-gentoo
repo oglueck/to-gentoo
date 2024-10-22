@@ -28,7 +28,7 @@ if [ "$(whoami)" != "root" ]; then
   exit 1
 fi
 
-for f in sed tar wget curl tar grep awk mount bash; do
+for f in sed tar wget curl grep awk mount umount bash; do
   which "${f}" >/dev/null || {
     echo "${f} missing. Please install." >&2
     exit 1
