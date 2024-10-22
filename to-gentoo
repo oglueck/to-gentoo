@@ -221,5 +221,7 @@ chsh -s /bin/bash
 
 echo "Your old system is in ${OLD}. Remove manually."
 echo "Keeping your kernel and /boot. Please review..."
+echo "You are now running Gentoo!"
+echo "Please run now: source /etc/profile"
 echo "It is advisable to install a new kernel and install and configure grub."
-echo "DONE! You should reboot now."
+echo "DONE! You should reboot afterwards."
