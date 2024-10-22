@@ -132,9 +132,8 @@ if [ -L /dev/shm ]; then
   chmod 1777 /dev/shm
 fi
 
-
-# using static busybox from Gentoo to run mv
 if [ -e "${GENTOO}/bin/busybox" ]; then
+  echo "using static busybox from Gentoo to run mv"
   cp "${GENTOO}/bin/busybox" /tmp
   MYMV="/tmp/busybox mv"
 elif [ -e /bin/mv ]; then
@@ -161,6 +160,7 @@ else
   echo "missing /bin/mv" >&2
   exit 1
 fi
+
 # test it
 touch /tmp/a
 ${MYMV} /tmp/a /tmp/b
