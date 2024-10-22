@@ -39,7 +39,7 @@ To make transition a bit smoother, the following things will be kept / migrated 
 Preconditions:
 - a modern x86\_64 Linux in single-user mode
 - about 8GB of free space on the / filesystem
-- Internet connection
+- direct Internet connection: proxies don't work properly
 
 How basic is the installed Gentoo system?
 A current Stage-3 system with current Portage repository is installed. So it is quite uptodate and can easily be brought to a fully patched level by running: 
