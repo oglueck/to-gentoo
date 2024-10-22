@@ -90,7 +90,6 @@ wget "${MIRROR}releases/amd64/autobuilds/${STAGE3}"
 
 STAGE3=$(ls -1 *.tar.xz)
 echo "Unpacking ${STAGE3}"
-# FIXME BusyBox tar has no --xattrs
 tar xpf "${STAGE3}" --xattrs
 rm "${STAGE3}"
 
